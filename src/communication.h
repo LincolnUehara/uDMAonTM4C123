@@ -34,7 +34,7 @@ uint8_t DMAcontroltable[1024] __attribute__ ((aligned(1024)));
 /*
  * Defines for communication.c.
  */
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 16
 #define UDMA_TIMING (BUFFER_SIZE*10*2)
 #define UART0RX_INTERRUPT		0x00000100		/* Check DMACHIS register. */
 #define UART0TX_INTERRUPT		0x00000200
@@ -68,9 +68,10 @@ extern void commUDMA_Init(void);
 extern void commTIMER0_Init(void);
 extern void commInterrupt(void);
 extern void commTransferData(void);
-extern void commReportBugMessage(void);
+extern void commReportMessage(void);
+extern void commConcatenateMessage(char message[], char information[][50], int pieces);
 extern void commProcessMsg(unsigned char *message);
-extern void commSendMessage(char TxMessageBuffer[], uint8_t dataLength);
+extern void commSendMessage(char TxMessageBuffer[], uint16_t dataLength);
 extern void commErrorHandler(void);
 extern void commEnableInterrupt(void);
 extern void commDisableInterrupt(void);

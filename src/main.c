@@ -69,6 +69,7 @@ int main()
 			 * TODO: Implement.
 			 */
 			/* commSendMessage(message, sizeof(message)); */
+			commReportMessage();
 			received = false;
 		}else;
 	}

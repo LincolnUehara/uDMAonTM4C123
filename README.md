@@ -7,6 +7,7 @@ Code for testing uDMA capabilities of Tiva TM4C123.
 Please set the following environment variables on your machine:
 ```
 GCC_HOME=/path/to/GNU/toolchain
+GCC_HOME_BIN=/path/to/GNU/toolchain/binaries
 TIVA_LIB=/path/to/TIVA/libraries
 TIVA_LIB_DRIVER=/path/to/TIVA/driver
 TIVA_FLASH=/path/to/flash/folder

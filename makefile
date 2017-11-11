@@ -6,12 +6,17 @@ PROJ_NAME=$(shell basename $(CURDIR))
 #
 # C compiler for ARM Cortex
 #
-CC=arm-none-eabi-gcc
+CC=$(GCC_HOME_BIN)/arm-none-eabi-gcc
 
 #
 # The command for calling the linker
 #
-LD=arm-none-eabi-ld
+LD=$(GCC_HOME_BIN)/arm-none-eabi-ld
+
+#
+# C library from GCC for embedded systems.
+#
+GCC_LIB_C=$(GCC_HOME)/arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard
 
 #
 # Macros for Tiva TM4C123GH6PM
@@ -48,12 +53,14 @@ CFLAGS=-c                             \
 #
 # Libraries used in the project.
 #
-LIBS=-ldriver
+LIBS=-ldriver                         \
+     -lc
 
 #
 # The flags passed to the linker.
 #
 LDFLAGS=-L$(TIVA_LIB_DRIVER)          \
+        -L$(GCC_LIB_C)                \
         $(LIBS)                       \
         --gc-sections                 \
         --static                      \
@@ -98,7 +105,7 @@ debugFolder:
 
 post-build:
 	@ echo 'Generate binary file from elf file'
-	arm-none-eabi-objcopy -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
+	$(GCC_HOME_BIN)/arm-none-eabi-objcopy -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
 	@ echo ' '
 
 #

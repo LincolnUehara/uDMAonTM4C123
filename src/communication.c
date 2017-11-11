@@ -1,12 +1,12 @@
 /*
  * communication.c
- *
  */
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include <inc/tm4c123gh6pm.h>
 #include <inc/hw_memmap.h>
 #include <inc/hw_gpio.h>
@@ -21,7 +21,7 @@
 #include <driverlib/udma.h>
 #include <driverlib/timer.h>
 #include <utils/uartstdio.h>
-#include <utils/ustdlib.h>
+#include <utils/ustdlib.c>
 #include "communication.h"
 
 /*
@@ -29,19 +29,26 @@
  */
 DEFINE_COMMUNICATION_PERIPHERALS(intStatus);
 DEFINE_COMMUNICATION_PERIPHERALS(perError);
-static char bufferRx[BUFFER_SIZE]; // TODO: unsigned[?]
+static char bufferRx[BUFFER_SIZE]; /* TODO: unsigned[?] */
 static char *messagePointer;
 static bool *receivedMessage;
 
 /*
  * Initialization of communication by UART/uDMA.
+ *
+ * \param receivedFlag is the address of the received flag.
+ * \param messageBuffer is the address to the message string.
+ *
+ * It receives pointers for flag and software buffer for
+ * communication purposes.
  */
-void commInit(bool *receivedAddress, char messageBuffer[]){
+void commInit(bool *receivedFlag, char messageBuffer[]){
 
 	/*
-	 * Initialize each peripheral and flag for receiving message.
+	 * Initialize flags for receiving message and each
+	 * peripheral.
 	 */
-	receivedMessage = receivedAddress;
+	receivedMessage = receivedFlag;
 	*receivedMessage = false;
 	messagePointer = &messageBuffer[0];
 	commTIMER0_Init();
@@ -57,7 +64,7 @@ void commUART_Init(void){
 	/*
 	 * Configure UART communication on TIVA.
 	 * Configure it to operate even if the CPU is in sleep.
-	 * Pins PA0 (Rx) and PA1 (Tx) are used
+	 * Pins PA0 (Rx) and PA1 (Tx) are used.
 	 */
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
@@ -74,16 +81,23 @@ void commUART_Init(void){
 
 	/*
 	 * Setting FIFO Level trigger.
+	 * TODO: To be implemented
 	 */
-    UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX4_8, UART_FIFO_RX4_8);
+	/* UARTFIFOEnable(UART0_BASE); */
+    /* UARTFIFOLevelSet(UART0_BASE, UART_FIFO_TX1_8, UART_FIFO_RX7_8); */
 
 	/*
-	 * Enable the UART for operation, and Enable the UART peripheral interrupts. Note that no UART interrupts
-	 * were enabled, but the uDMA controller will cause an interrupt on the
+	 * Enable the UART peripheral interrupts.
+	 * The uDMA controller will cause an interrupt on the
 	 * UART interrupt signal when a uDMA transfer is complete.
 	 */
-	UARTEnable(UART0_BASE);
 	IntEnable(INT_UART0);
+	UARTIntEnable(UART0_BASE, UART_INT_RT | UART_INT_RX);
+
+	/*
+	 * Enable the UART for operation
+	 */
+	UARTEnable(UART0_BASE);
 }
 
 /*
@@ -98,49 +112,59 @@ void commUDMA_Init(){
 	uDMAEnable();
 
 	/*
-	 * Point at the control table to use for channel control structures.
+	 * Point at the control table to use for channel
+	 * control structures.
 	 */
 	uDMAControlBaseSet(DMAcontroltable);
 
 	/*
-	 * TODO: Check.
+	 * Assign the uDMA channel to the peripherals and
+	 * disable all the attributes in case any was set.
 	 */
 	uDMAChannelAssign(UDMA_CH8_UART0RX);
 	uDMAChannelAssign(UDMA_CH9_UART0TX);
-
-	/*
-	 * 1 - Disable all the atributes in case any was set.
-	 * 2 - Set the channel control.
-	 * 3 - Set up the transfer parameters
-	 * TODO: Check.
-	 */
 	uDMAChannelAttributeDisable(UDMA_CH8_UART0RX,
-			UDMA_ATTR_ALTSELECT | UDMA_ATTR_USEBURST |
+			UDMA_ATTR_USEBURST | UDMA_ATTR_ALTSELECT |
 			UDMA_ATTR_HIGH_PRIORITY | UDMA_ATTR_REQMASK);
 	uDMAChannelAttributeDisable(UDMA_CH9_UART0TX,
-			UDMA_ATTR_ALTSELECT | UDMA_ATTR_HIGH_PRIORITY |
-			UDMA_ATTR_REQMASK);
+			UDMA_ATTR_USEBURST | UDMA_ATTR_ALTSELECT |
+			UDMA_ATTR_HIGH_PRIORITY | UDMA_ATTR_REQMASK);
+
+	/*
+	 * Set the channel control.
+	 * In this case we are working with string of char values,
+	 * so we use UDMA_SIZE_8. No increment is used on source,
+	 * because it will be pointing to UART_O_DR register, and
+	 * increment of 8 bits are used because we will fill a
+	 * string of char values "bufferRx".
+	 */
 	uDMAChannelControlSet(UDMA_CH8_UART0RX | UDMA_PRI_SELECT,
 			UDMA_SIZE_8 | UDMA_SRC_INC_NONE | UDMA_DST_INC_8 |
-			UDMA_ARB_4);
+			UDMA_ARB_1);
 	uDMAChannelControlSet(UDMA_CH9_UART0TX | UDMA_PRI_SELECT,
 			UDMA_SIZE_8 | UDMA_SRC_INC_8 | UDMA_DST_INC_NONE |
-			UDMA_ARB_4);
-	uDMAChannelTransferSet(UDMA_CH8_UART0RX | UDMA_PRI_SELECT,
-			UDMA_MODE_BASIC,(void *)(UART0_BASE + UART_O_DR),
-			&bufferRx,sizeof(bufferRx));
+			UDMA_ARB_1);
 
 	/*
 	 * Enable the uDMA interface for both TX and RX channels.
-	 * Enable the DMA channel for RX. "UDMA_CH9_UART0TX" is not
-	 * enabled until main function processing.
 	 */
 	UARTDMAEnable(UART0_BASE, UART_DMA_RX | UART_DMA_TX);
+
+	/*
+	 * Set up the transfer parameters and enable the uDMA
+	 * channel for RX.
+	 * "UDMA_CH9_UART0TX" is not enabled until there is data
+	 * to be sent on commSendMessage API.
+	 */
+	uDMAChannelTransferSet(UDMA_CH8_UART0RX | UDMA_PRI_SELECT,
+			UDMA_MODE_AUTO, (void *)(UART0_BASE + UART_O_DR),
+			&bufferRx, sizeof(bufferRx));
     uDMAChannelEnable(UDMA_CH8_UART0RX);
 }
 
 /*
  * Initialization of Timer0 peripheral.
+ * TODO: To be implemented.
  */
 void commTIMER0_Init(void){
 
@@ -148,18 +172,18 @@ void commTIMER0_Init(void){
 	 * Configuring the 32-bit periodic timers.
 	 */
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-	TimerConfigure(TIMER0_BASE, TIMER_CFG_ONE_SHOT_UP); // TODO: Check.
+	TimerConfigure(TIMER0_BASE, TIMER_CFG_ONE_SHOT_UP);
 	TimerLoadSet(TIMER0_BASE, TIMER_A, UDMA_TIMING);
 
 	/*
 	 * Enable the Timers for timeout interrupt.
 	 */
-	IntEnable(INT_TIMER0A);
-	TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+	/* IntEnable(INT_TIMER0A); */
+	/* TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT); */
 }
 
 /*
- * Interrupt handler for UART and Timer.
+ * Interrupt handler for uDMA/UART.
  */
 void commInterrupt(void){
 
@@ -168,36 +192,11 @@ void commInterrupt(void){
 	 */
 	intStatus.UART = UARTIntStatus(UART0_BASE, 1);
 	intStatus.uDMA = uDMAIntStatus();
-	intStatus.TIMER0 = TimerIntStatus(TIMER0_BASE, 1);
 
 	/*
-	 * Start the timer if UART/uDMA started to receive something.
+	 * Check if interrupt was generated by Rx/uDMA.
 	 */
-	if(intStatus.UART & UART0FIFO_INTERRUPT)
-		TimerEnable(TIMER0_BASE, TIMER_A);
-
-	/*
-	 * Check if interrupt was generated by Rx/uDMA or Timer0.
-	 * If generated by Rx/uDMA, it means that received enough
-	 * message to fill RxBuffer. If generated by Timer0, it means
-	 * that received the message, but not enough to fulfill the
-	 * buffer.
-	 */
-	if((intStatus.uDMA & UART0RX_INTERRUPT)||
-	    (intStatus.TIMER0 & TIMER_TIMA_TIMEOUT)){
-
-		/*
-		 * Clear only Rx interrupt for UART0.
-		 */
-		uDMAIntClear(UART0RX_INTERRUPT);
-
-		/*
-		 * Disable Timer0, clear its interrupt and reset it.
-		 * Only do it inside this "if" condition.
-		 */
-		TimerDisable(TIMER0_BASE, TIMER_A);
-		TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-		HWREG(TIMER0_BASE+0x50) = 0;
+	if(intStatus.uDMA & UART0RX_INTERRUPT){
 
 		/*
 		 * Transfer data to main.c variable.
@@ -205,32 +204,42 @@ void commInterrupt(void){
 		commTransferData();
 
 		/*
-		 * Enable the receiving for next message.
+		 * Set the receiving for next message.
 		 */
 		uDMAChannelTransferSet(UDMA_CH8_UART0RX | UDMA_PRI_SELECT,
-				UDMA_MODE_BASIC,(void *)(UART0_BASE + UART_O_DR),
+				UDMA_MODE_AUTO, (void *)(UART0_BASE + UART_O_DR),
 				&bufferRx, sizeof(bufferRx));
 		uDMAChannelEnable(UDMA_CH8_UART0RX);
 
 		/*
-		 * Enable UART interrupt. Only enable in the end because
-		 * it will be the first one to be set.
+		 * Clear interrupts. Only clear next to end of interrupt
+		 * because commTransferData API processing time is variable.
 		 */
+		uDMAIntClear(intStatus.uDMA);
 		UARTIntClear(UART0_BASE, intStatus.UART);
 	}
 
 	/*
-	 * For debugging purposes. "else" is not applicable here.
+	 * Check if interrupt was generated by Tx/uDMA.
+	 */
+	if(intStatus.uDMA & UART0TX_INTERRUPT){
+
+		/*
+		 * Just clear all the interrupts.
+		 */
+		uDMAIntClear(intStatus.uDMA);
+		UARTIntClear(UART0_BASE, intStatus.UART);
+	}
+
+	/*
+	 * If none of previous flags was set, just clear the
+	 * interrupts. "else" is not applicable here.
 	 */
 	if((intStatus.uDMA != UART0RX_INTERRUPT)
-			&& (intStatus.TIMER0 != TIMER_TIMA_TIMEOUT)
-			&& (intStatus.UART != UART0FIFO_INTERRUPT)){
+		&& (intStatus.uDMA != UART0TX_INTERRUPT)){
 
-		commReportBugMessage();
-		UARTIntClear(UART0_BASE, intStatus.UART);
 		uDMAIntClear(intStatus.uDMA);
-		TimerIntClear(TIMER0_BASE, intStatus.TIMER0);
-		while(1);
+		UARTIntClear(UART0_BASE, intStatus.UART);
 	}
 }
 
@@ -239,13 +248,19 @@ void commInterrupt(void){
  */
 void commTransferData(void){
 
+	/*
+	 * Transfer the data to the buffer of main function.
+	 */
 	for(int i = 0 ; i < BUFFER_SIZE ; i++){
 		*messagePointer = bufferRx[i];
 		messagePointer++;
 	}
 
+	/*
+	 * Set the flag indicating that some message arrived
+	 * and clear the bufferRx to not polute uDMA side.
+	 */
 	*receivedMessage = true;
-
 	for(int i = (BUFFER_SIZE-1) ; i >= 0 ; i--){
 		bufferRx[i] = '\0';
 		messagePointer--;
@@ -253,32 +268,65 @@ void commTransferData(void){
 }
 
 /*
- * Report bug message and stuck.
+ * Report status message.
  */
-void commReportBugMessage(void){
+void commReportMessage(void){
 
-	commDisableInterrupt();
+	/*
+	 * TODO: Avail if is better to create every time or
+	 * create a static variable.
+	 * Note: Static here maintain the previous value.
+	 */
+	//char information[5][60];
+	char message[300];
+	char *pointer;
+	pointer = &message[0];
 
-	UARTprintf("\n Some error occurred on communication interrupt.");
-	UARTprintf("UART interrupt flags: %d", intStatus.UART);
-	UARTprintf("uDMA interrupt flags: %d", intStatus.uDMA);
-	UARTprintf("Timer0 interrupt flags: %d", intStatus.TIMER0);
-}
+	/*
+	 * Flush any information that is inside the variables.
+	 */
+	//for(int i=0;i<4;i++)for(int j=0;j<50;j++)information[i][j]='\0';
+	for(int i=0;i<300;i++)message[i]='\0';
 
-/*
- * Process and organize the received message.
- */
-void commProcessMsg(unsigned char *message){
+	/*
+	 * Messages to be sent.
+	 * First merge into information strings and then merge into the final message.
+	 */
+	/*
+	usprintf(information[0], "\nBelow is described status of interrupts and errors:");
+	usprintf(information[1], "\nUART interrupt flags: %X", intStatus.UART);
+	usprintf(information[2], "\nuDMA interrupt flags: %X", intStatus.uDMA);
+	usprintf(information[3], "\nTimer0 interrupt flags: %X", intStatus.TIMER0);
+	usprintf(information[4], "\nErrors on uDMA Handler: %d", perError.uDMA);
+	for(int i = 0 ; i < 5 ; i++)
+		strcat(message, information[i]);
+	*/
 
+	pointer += usprintf(pointer, "Below is described status of interrupts and errors:\n");
+	pointer += usprintf(pointer, "UART interrupt flags: %X\n", intStatus.UART);
+	pointer += usprintf(pointer, "uDMA interrupt flags: %X\n", intStatus.uDMA);
+	pointer += usprintf(pointer, "Timer0 interrupt flags: %X\n", intStatus.TIMER0);
+	pointer += usprintf(pointer, "Errors on uDMA Handler: %d\n", perError.uDMA);
+
+	/*
+	 * Send the message.
+	 */
+	commSendMessage(message, sizeof(message));
 }
 
 /*
  * Send a string vector of the argument.
+ *
+ * \param TxMessageBuffer is the address of the message string.
+ * \param dataLength is the length of the message to be sent.
+ *
+ * It receives the message string address and send it through
+ * uDMA. Use "sizeof()" function to facilitate length count.
  */
-void commSendMessage(char TxMessageBuffer[], uint8_t dataLength){
+void commSendMessage(char TxMessageBuffer[], uint16_t dataLength){
 
 	uDMAChannelTransferSet(UDMA_CH9_UART0TX | UDMA_PRI_SELECT,
-	    UDMA_MODE_BASIC, TxMessageBuffer,
+		UDMA_MODE_BASIC, TxMessageBuffer,
 		(void *)(UART0_BASE + UART_O_DR), dataLength);
 
 	uDMAChannelEnable(UDMA_CH9_UART0TX);
@@ -299,35 +347,17 @@ void commErrorHandler(void){
 }
 
 /*
- * Enables UART receiver interrupt.
+ * Enables interrupt.
+ * TODO: To be implemented.
  */
 void commEnableInterrupt(void) {
 
-	IntEnable(INT_UART0);
-	UARTIntEnable(UART0_BASE, UART_INT_TX | UART_INT_RX);
-	/* TODO: Check "UART_INT_RT" */
 }
 
 /*
- * Disables UART receiver interrupt.
+ * Disables interrupt.
+ * TODO: To be implemented.
  */
 void commDisableInterrupt(void) {
 
-	IntDisable(INT_UART0);
-	UARTIntDisable(UART0_BASE, UART_INT_RX | UART_INT_RT);
-}
-
-/*
- * Shows the report about uDMA communication.
- * TODO: Implement.
- */
-void commShowReport(void){
-
-	/*
-	 * Print the result.
-	 */
-	char egbt_text[40]={
-			"Errors on uDMA Handler:"
-	};
-	UARTprintf("%s \t\t%d \n", egbt_text, perError.uDMA);
 }
