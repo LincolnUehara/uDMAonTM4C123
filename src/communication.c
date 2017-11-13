@@ -277,7 +277,6 @@ void commReportMessage(void){
 	 * create a static variable.
 	 * Note: Static here maintain the previous value.
 	 */
-	//char information[5][60];
 	char message[300];
 	char *pointer;
 	pointer = &message[0];
@@ -285,23 +284,12 @@ void commReportMessage(void){
 	/*
 	 * Flush any information that is inside the variables.
 	 */
-	//for(int i=0;i<4;i++)for(int j=0;j<50;j++)information[i][j]='\0';
 	for(int i=0;i<300;i++)message[i]='\0';
 
 	/*
 	 * Messages to be sent.
 	 * First merge into information strings and then merge into the final message.
 	 */
-	/*
-	usprintf(information[0], "\nBelow is described status of interrupts and errors:");
-	usprintf(information[1], "\nUART interrupt flags: %X", intStatus.UART);
-	usprintf(information[2], "\nuDMA interrupt flags: %X", intStatus.uDMA);
-	usprintf(information[3], "\nTimer0 interrupt flags: %X", intStatus.TIMER0);
-	usprintf(information[4], "\nErrors on uDMA Handler: %d", perError.uDMA);
-	for(int i = 0 ; i < 5 ; i++)
-		strcat(message, information[i]);
-	*/
-
 	pointer += usprintf(pointer, "Below is described status of interrupts and errors:\n");
 	pointer += usprintf(pointer, "UART interrupt flags: %X\n", intStatus.UART);
 	pointer += usprintf(pointer, "uDMA interrupt flags: %X\n", intStatus.uDMA);
