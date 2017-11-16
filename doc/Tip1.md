@@ -19,6 +19,7 @@ Tests were made and shows that any variant appears bug on system.
 If you are curious and wanna see what happens, make a char buffer string of 8 R's, set ui32TransferSize as 6, and use UDMA_ARB_4 and UART_FIFO_RX1_8 flags. Type alphabets at input.
 
 Input: ABCDEFGHIJKLMNOPQRSTUVXZ
+
 Output: ABEFIJMNQRCCSTRRUVGGXZRR
 
 ![Figure1](https://github.com/LincolnUehara/uDMAonTM4C123/tree/master/doc/Figures/Tip1_Figure1.jpg)
