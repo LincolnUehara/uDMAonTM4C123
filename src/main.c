@@ -48,28 +48,11 @@ int main()
 	while(1){
 
 		/*
-		 * If received command from UART, process it.
+		 * If received message from UART, just resend it.
 		 */
     	if(received == true){
 
-			/*
-			 *
-			 */
-			if(message[0] == 'R')
-				GPIOPinWrite(GPIO_PORTF_BASE,
-				    RED_LED | BLUE_LED | GREEN_LED, RED_LED);
-			if(message[0] == 'G')
-				GPIOPinWrite(GPIO_PORTF_BASE,
-					RED_LED | BLUE_LED | GREEN_LED, GREEN_LED);
-			if(message[0] == 'B')
-				GPIOPinWrite(GPIO_PORTF_BASE,
-				    RED_LED | BLUE_LED | GREEN_LED, BLUE_LED);
-
-			/*
-			 * TODO: Implement.
-			 */
-			/* commSendMessage(message, sizeof(message)); */
-			commReportMessage();
+			commSendMessage(message, sizeof(message));
 			received = false;
 		}else;
 	}

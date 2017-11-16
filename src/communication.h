@@ -34,8 +34,9 @@ uint8_t DMAcontroltable[1024] __attribute__ ((aligned(1024)));
 /*
  * Defines for communication.c.
  */
-#define BUFFER_SIZE 16
-#define UDMA_TIMING (BUFFER_SIZE*10*2)
+#define BUFFER_SIZE             8
+#define UDMA_TIMING             (BUFFER_SIZE*10*2)
+#define NO_INTERRUPT            0
 #define UART0RX_INTERRUPT		0x00000100		/* Check DMACHIS register. */
 #define UART0TX_INTERRUPT		0x00000200
 #define UART0FIFO_INTERRUPT     0x00000010      /* Check UARTRIS or UARTMIS register*/
@@ -65,17 +66,13 @@ typedef struct {
 extern void commInit(bool *receivedAddress, char messageBuffer[]);
 extern void commUART_Init(void);
 extern void commUDMA_Init(void);
-extern void commTIMER0_Init(void);
 extern void commInterrupt(void);
 extern void commTransferData(void);
-extern void commReportMessage(void);
-extern void commConcatenateMessage(char message[], char information[][50], int pieces);
-extern void commProcessMsg(unsigned char *message);
+extern void commReceiveMessage(void);
 extern void commSendMessage(char TxMessageBuffer[], uint16_t dataLength);
 extern void commErrorHandler(void);
-extern void commEnableInterrupt(void);
-extern void commDisableInterrupt(void);
-extern void commShowReport(void);
+extern void commReportMessage1(void);
+extern void commReportMessage2(void);
 
 /*
  * Mark the end of the C bindings section for C++ compilers.
