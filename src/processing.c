@@ -8,6 +8,8 @@
  */
 void commProcessMsg(unsigned char *message){
 
+	/*
+    ustrncpy(messagePointer, bufferRx, BUFFER_SIZE);
+    */
 }
-
 

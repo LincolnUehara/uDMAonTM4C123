@@ -41,8 +41,8 @@ static void IntDefaultHandler(void);
 // External declarations for the interrupt handlers used by the application.
 //
 //*****************************************************************************
-extern void commInterrupt(void);
-extern void commErrorHandler(void);
+extern void UART0Interrupt(void);
+extern void uDMAErrorHandler(void);
 
 //*****************************************************************************
 //
@@ -89,7 +89,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-	commInterrupt,                      	// UART0 Rx and Tx
+	UART0Interrupt,                      	// UART0 Rx and Tx
 	IntDefaultHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
@@ -131,7 +131,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // USB0
     IntDefaultHandler,                      // PWM Generator 3
 	IntDefaultHandler,                      // uDMA Software Transfer
-	commErrorHandler,                       // uDMA Error
+	uDMAErrorHandler,                       // uDMA Error
     IntDefaultHandler,                      // ADC1 Sequence 0
     IntDefaultHandler,                      // ADC1 Sequence 1
     IntDefaultHandler,                      // ADC1 Sequence 2

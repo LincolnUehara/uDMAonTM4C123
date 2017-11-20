@@ -35,6 +35,7 @@ FPU=-mfpu=fpv4-sp-d16 -mfloat-abi=hard
 #
 CFLAGS=-c                             \
        -O0                            \
+       -g                             \
        $(TIVA_MACROS)                 \
        -I$(TIVA_LIB)                  \
        -mthumb                        \

@@ -28,10 +28,6 @@ If you are tottally lost on this, it's better to start from [Thiago Filadelfo's]
 
 To build the binary, just type command "make all". To clean the directory, type "make clean". To flash onto device, type "make flash".
 
-### Purpose of the code
-
-The code is used to study about μDMA settings and works. The results about some analysis will be inside /doc folder.
-
 ### License and Manifest
 
 This project is licensed under the BSD-EULA License. See [TI-BSD-EULA.txt](https://github.com/LincolnUehara/blinkyTM4C123/blob/master/doc/TI-BSD-EULA.txt) file for more details.
