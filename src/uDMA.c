@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <inc/hw_uart.h>
 #include <inc/hw_memmap.h>
 #include <driverlib/udma.h>
@@ -68,6 +67,10 @@ void uDMAInitUART0(void){
  * \param RxMessageBuffer is the address of the buffer where the
  * data will be stored.
  * \param dataLength is the length of the message to be received.
+ *
+ * It prepares the receiving of data storing on RxMessageBuffer
+ * a number of bytes defined by dataLength.
+ * Use "sizeof()" function to facilitate length count.
  */
 void uDMAReceiveUART0(char RxMessageBuffer[], uint16_t dataLength){
 
@@ -86,7 +89,8 @@ void uDMAReceiveUART0(char RxMessageBuffer[], uint16_t dataLength){
  * \param dataLength is the length of the message to be sent.
  *
  * It receives the message string address and send it through
- * uDMA. Use "sizeof()" function to facilitate length count.
+ * uDMA.
+ * Use "sizeof()" function to facilitate length count.
  */
 void uDMASendUART0(char TxMessageBuffer[], uint16_t dataLength){
 
