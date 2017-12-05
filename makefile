@@ -77,6 +77,7 @@ LDFLAGS=-L$(TIVA_LIB_DRIVER)          \
 # Sources to .c and .h
 #
 CSOURCES=$(wildcard ./src/*.c)
+CHEADERS=$(wildcard ./src/*.h)
 
 #
 # Objects and dependencies files from .c files
@@ -97,7 +98,7 @@ $(PROJ_NAME).elf: $(OBJ)
 	@ echo ' '
 	@ $(MAKE) --no-print-directory post-build
 
-./Debug/src/%.o: ./src/%.c
+./Debug/src/%.o: ./src/%.c $(CHEADERS)
 	@ echo 'Building file: $<'
 	$(CC) $< $(CFLAGS) -o $@
 	@ echo ' '
