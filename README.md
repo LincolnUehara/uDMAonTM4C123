@@ -14,13 +14,14 @@ Please edit makefile or see more details on wiki to adjust to your convenience.
 
 ### Operating instructions
 
-To build the binary, just type command "make all". To clean the directory, type "make clean". To flash onto device, type "make flash".
+* To build the binary, just type command "make all".
+* To clean the directory, type "make clean".
+* To flash onto device, type "make flash".
+* To see elf file properties, type "make readelf".
 
 ### License and Manifest
 
-This project is licensed under the BSD-EULA License. See [TI-BSD-EULA.txt](https://github.com/LincolnUehara/blinkyTM4C123/blob/master/doc/TI-BSD-EULA.txt) file for more details.
-
-Check the [MANIFEST.txt](https://github.com/LincolnUehara/blinkyTM4C123/blob/master/doc/MANIFEST.txt) file to see more details about libraries offered by Texas Instruments.
+This project is licensed under the BSD License. See [LICENSE](https://github.com/LincolnUehara/uDMAonTM4C123/blob/master/LICENSE) file for more details.
 
 ### Author
 

@@ -126,6 +126,9 @@ flash:
 	@ echo 'Flashing into device...'
 	@ $(TIVA_FLASH)/dslite.sh --mode flash --config=$(CURDIR)/def/tm4c123gh6pm.ccxml $(CURDIR)/$(PROJ_NAME).elf
 
-.PHONY: all clean
+readelf:
+	@ readelf -a $(PROJ_NAME).elf
+
+.PHONY: all clean flash readelf
 
 .SECONDARY: post-build
