@@ -36,23 +36,23 @@ int main(){
 
 		/*
 		 * If received message from UART, set the variables
-                 * and resent the message.
+		 * and resent the message.
 		 */
 		if(UART0received == true){
 
-            		UART0received = false;
+            	UART0received = false;
     			UART0sent = false;
     			UART0SendMessage(UART0message);
 		}
 
-    		/*
-    		 * If message was sent, flush the buffer and set the variable.
-    		 */
-    		if(UART0sent == true){
-    			for(int i = 0 ; i < FIFO_TRIGGER_SIZE; i++){
-    				UART0message[i] = '\0';
-    			}
-    			UART0sent = false;
+    	/*
+    	 * If message was sent, flush the buffer and set the variable.
+    	 */
+    	if(UART0sent == true){
+    		for(int i = 0 ; i < FIFO_TRIGGER_SIZE; i++){
+    			UART0message[i] = '\0';
     		}
+    		UART0sent = false;
+    	}
 	}
 }
