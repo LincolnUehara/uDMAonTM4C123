@@ -7,6 +7,8 @@
 
 This code was intended to study the usage of μDMA on Tiva TM4C123, plus about compiling code using makefile. In this example the user sends characters via UART port (using [Energia IDE](http://energia.nu/), for example), and all the typed text is showed at user's console. The transportation of data is made by μDMA in burst mode.
 
+I wrote [an article](https://www.embarcados.com.br/dma-direct-memory-access/) on _Embarcados_ about DMA. Originally in Portuguese language, with auto translations to English and Spanish.
+
 ### Configuration instructions
 
 Please [check the wiki](https://github.com/LincolnUehara/uDMAonTM4C123/wiki) to see all configurations needed to your machine.
